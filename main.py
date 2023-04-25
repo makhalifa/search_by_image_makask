@@ -43,13 +43,6 @@ def pipeline(res):
         }
     }, {
         '$lookup': {
-            'from': 'sizes', 
-            'localField': 'color._id', 
-            'foreignField': 'color', 
-            'as': 'size'
-        }
-    }, {
-        '$lookup': {
             'from': 'reviews', 
             'localField': 'reviews', 
             'foreignField': '_id', 
@@ -63,7 +56,6 @@ def pipeline(res):
             'category': 1, 
             'subcategory': 1, 
             'color': '$color.color', 
-            'size': '$size.name', 
             'images': {
                 '$first': '$color.images'
             }, 
