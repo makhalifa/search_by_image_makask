@@ -18,7 +18,6 @@ gunicorn==20.1.0
 h11==0.14.0
 h5py==3.8.0
 idna==3.4
-jax==0.4.8
 joblib==1.2.0
 keras==2.12.0
 libclang==16.0.0
