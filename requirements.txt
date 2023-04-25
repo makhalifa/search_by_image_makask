@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+scikit-learn
+keras
+tensorflow
+gunicorn
+pillow
+pymongo
+keras
