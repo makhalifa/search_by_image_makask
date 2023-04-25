@@ -2,8 +2,8 @@ from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 import uvicorn
-# from old_model.model import RecommendationSystem
-from model.main import RecommendationSystem
+from old_model.model import RecommendationSystem
+# from model.main import RecommendationSystem
 import numpy as np
 import json
 # MongoDB
