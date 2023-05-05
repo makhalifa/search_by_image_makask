@@ -1,0 +1,7 @@
+services:
+  - name: app
+    env:
+      - key: NVIDIA_VISIBLE_DEVICES
+        value: all
+    buildCommand: docker build -t app:latest .
+    startCommand: docker run -d -p 8000:8000 app:latest
