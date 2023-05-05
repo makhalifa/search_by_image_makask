@@ -1,7 +1,12 @@
 services:
-  - name: app
+  - name: myapp
+    dockerfile: Dockerfile
     env:
       - key: NVIDIA_VISIBLE_DEVICES
-        value: all
-    buildCommand: docker build -t app:latest .
-    startCommand: docker run -d -p 8000:8000 app:latest
+        value: "all"
+      - key: NVIDIA_DRIVER_CAPABILITIES
+        value: "compute,utility"
+    envSecrets:
+      - source: my-secrets
+        destination: /app/secrets.json
+    healthCheckPath: /health
