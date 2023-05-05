@@ -1,20 +1,30 @@
-FROM nvidia/cuda:11.4.0-cudnn8-runtime-ubuntu20.04
+# Use the official Python image as a parent image
+FROM python:3.8-slim-buster
 
+# Set the working directory to /app
 WORKDIR /app
 
+# Copy the requirements file into the container at /app
 COPY requirements.txt .
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        python3.8 \
-        python3-pip \
-        libglib2.0-0 \
-        libsm6 \
-        libxext6 \
-        libxrender-dev \
-    && rm -rf /var/lib/apt/lists/*
+# Install any dependencies specified in requirements.txt
+RUN pip install --trusted-host pypi.python.org -r requirements.txt
 
-RUN pip3 install -r requirements.txt
+# Install NVIDIA CUDA Toolkit and cuDNN library
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends gnupg2 && \
+    echo "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64 /" > /etc/apt/sources.list.d/cuda.list && \
+    echo "deb http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/x86_64 /" > /etc/apt/sources.list.d/nvidia-ml.list && \
+    curl -sL https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub | apt-key add - && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends cuda-10-2 libcudnn7=7.6.5.32-1+cuda10.2 libcudnn7-dev=7.6.5.32-1+cuda10.2 && \
+    rm -rf /var/lib/apt/lists/*
 
-COPY . .
+# Copy the rest of the application code into the container at /app
+COPY . /app
 
-CMD ["python3", "app.py"]
+# Expose port 80 for the API
+EXPOSE 80
+
+# Start the API server with uvicorn
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80", "--workers", "4", "--proxy-headers"]
