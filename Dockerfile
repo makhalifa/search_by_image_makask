@@ -1,7 +1,7 @@
 FROM tiangolo/uvicorn-gunicorn-fastapi:python3.8
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
+# Install CUDA and cuDNN for GPU support
+RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
         cuda-command-line-tools-11-2 \
         libcudnn8=8.1.1.33-1+cuda11.2 \
@@ -12,10 +12,12 @@ RUN apt-get update \
         libnvparsers-dev=7.2.1-1+cuda11.2 \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
+# Install any other dependencies you need
+COPY requirements.txt /app
+RUN pip install --no-cache-dir -r /app/requirements.txt
 
-COPY ./app /app
+# Copy your app code and model files into the container
+COPY . /app
 
-RUN pip install -r requirements.txt
-
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+# Set the default command to start the app server
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80", "--workers", "1"]

@@ -1,12 +1,12 @@
+env:
+  PYTHONUNBUFFERED: "true"
+
 services:
-  - name: myapp
-    dockerfile: Dockerfile
+  - name: web
+    build:
+      context: .
+      dockerfile: Dockerfile
     env:
-      - key: NVIDIA_VISIBLE_DEVICES
-        value: "all"
-      - key: NVIDIA_DRIVER_CAPABILITIES
-        value: "compute,utility"
-    envSecrets:
-      - source: my-secrets
-        destination: /app/secrets.json
-    healthCheckPath: /health
+      - NVIDIA_VISIBLE_DEVICES=all
+    port: 80
+    start_command: uvicorn main:app --host 0.0.0.0 --port 80 --workers 1
