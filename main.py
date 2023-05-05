@@ -9,6 +9,7 @@ import json
 # MongoDB
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
+from bson import ObjectId
 # # Url to the image
 # import urllib.request
 from io import BytesIO
@@ -30,71 +31,8 @@ product_id = []
 for p in products:
     formated_data.append(p["formated_img"])
     product_id.append(p["_id"])
-
-def pipeline(res):
-    return [
-    {'$match' : { '_id': { '$in': res } }},
-    {
-        '$lookup': {
-            'from': 'colors', 
-            'localField': '_id', 
-            'foreignField': 'product', 
-            'as': 'color'
-        }
-    }, {
-        '$lookup': {
-            'from': 'reviews', 
-            'localField': 'reviews', 
-            'foreignField': '_id', 
-            'as': 'reviews'
-        }
-    }, {
-        '$project': {
-            '_id': 1, 
-            'seller': 1, 
-            'title': 1, 
-            'category': 1, 
-            'subcategory': 1, 
-            'color': '$color.color', 
-            'images': {
-                '$first': '$color.images'
-            }, 
-            'price': {
-                '$toDouble': {
-                    '$first': '$color.price'
-                }
-            }, 
-            'discount': {
-                '$first': '$color.discount'
-            }, 
-            'n': {
-                '$size': '$reviews'
-            }, 
-            'rating': {
-                '$cond': {
-                    'if': {
-                        '$eq': [
-                            {
-                                '$size': '$reviews'
-                            }, 0
-                        ]
-                    }, 
-                    'then': 0, 
-                    'else': {
-                        '$divide': [
-                            {
-                                '$sum': '$reviews.rating'
-                            }, {
-                                '$size': '$reviews'
-                            }
-                        ]
-                    }
-                }
-            }, 
-            'createdAt': 1
-        }
-    }
-]
+print("formated_data", len(formated_data))
+print("product_id", len(product_id))
 
 app = FastAPI()
 
@@ -111,8 +49,12 @@ mongo_uri = "mongodb+srv://makask:makask@cluster0.tbjzwli.mongodb.net/makask?ret
 # Connect to the MongoDB instance
 try:
     client = MongoClient("mongodb+srv://makask:makask@cluster0.tbjzwli.mongodb.net/makask?retryWrites=true&w=majority")
+    db = client.makask
+    collection = db.products
+
 except ConnectionFailure as e:
     print("Could not connect to MongoDB:", e)
+
 
 @app.get("/")
 async def root():
@@ -132,20 +74,23 @@ async def test(file: bytes = File(...)):
 @app.post("/recommend")
 async def recommend(file:bytes = File(...), n:int = 5):
     extension = imghdr.what(None, file)
-    print(extension)
+    # print(extension)
     img = Image.open(BytesIO(file))
-    print(file)
+    # print(file)
     # Make class instance
     rec = RecommendationSystem(formated_data, product_id)
     # # Recommend n images based on the image provided
     res = rec.recommender(img, n)
     
-    documents = client.makask.products.find({"_id": {"$in": res}})
+    # documents = client.makask.products.find({"_id": {"$in": res}})
     
-    return list(documents)
+    return list(res)
 
 @app.post("/recommend/v2")
 async def recommend(file:bytes = File(...), n:int = 5):
+    # check if file is exist
+    if (file == None):
+        return {"message": "file not found"}
     extension = imghdr.what(None, file)
     img = Image.open(BytesIO(file))
     # save the image in its original format
@@ -161,10 +106,22 @@ async def recommend(file:bytes = File(...), n:int = 5):
     if os.path.exists(filename):
         os.remove(filename)
 
-    # documents = client.makask.products.find({"_id": {"$in": res}})
-    documents = client.makask.products.aggregate(pipeline(res))
+    docs_id = []
+    for i in res:
+        docs_id.append(ObjectId(i))
 
-    return list(documents)
+    docs = collection.find({"_id": {"$in": docs_id}})
+
+    results =[]
+    for doc in docs:
+        doc["_id"] = str(doc["_id"])
+        doc["seller"] = str(doc["seller"])
+        del doc["reviews"]
+        del doc["colorSizes"]
+        print(doc["_id"])
+        results.append(doc)
+
+    return {"products": results}
 
 # uvicorn main:app --reload
 if __name__ == "__main__":
