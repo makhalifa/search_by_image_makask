@@ -1,12 +1,7 @@
-env:
-  PYTHONUNBUFFERED: "true"
-
 services:
-  - name: web
-    build:
-      context: .
-      dockerfile: Dockerfile
+  - name: app
     env:
-      - NVIDIA_VISIBLE_DEVICES=all
-    port: 80
-    start_command: uvicorn main:app --host 0.0.0.0 --port 80 --workers 1
+      - key: NVIDIA_VISIBLE_DEVICES
+        value: all
+    buildCommand: docker build -t app:latest .
+    startCommand: docker run -d -p 8000:8000 app:latest
