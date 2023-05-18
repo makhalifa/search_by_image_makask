@@ -2,8 +2,10 @@ from fastapi import FastAPI, File, UploadFile , Body
 from fastapi.middleware.cors import CORSMiddleware
 
 import uvicorn
-from model.model import RecommendationSystem
-# from model.main import RecommendationSystem
+
+# import RecommendationSystem from model
+from app.model.model import RecommendationSystem
+
 import numpy as np
 import json
 # MongoDB
@@ -25,7 +27,8 @@ import datetime
 import os
 
 
-products = np.array(json.load(open('products_thumbnails.json', 'rb')))
+products = np.array(json.load(open('app/products_thumbnails.json', 'rb')))
+
 formated_data = []
 product_id = []
 for p in products:
