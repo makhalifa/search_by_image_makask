@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile 
+from fastapi import FastAPI, File, UploadFile , Body
 from fastapi.middleware.cors import CORSMiddleware
 
 import uvicorn
@@ -25,7 +25,7 @@ import datetime
 import os
 
 
-products = np.array(json.load(open('product_thumbnail.json', 'rb')))
+products = np.array(json.load(open('products_thumbnails.json', 'rb')))
 formated_data = []
 product_id = []
 for p in products:
@@ -72,7 +72,7 @@ async def test(file: bytes = File(...)):
     return {"message": "done ✅"}
 
 @app.post("/recommend")
-async def recommend(file:bytes = File(...), n:int = 5):
+async def search(imgUrl:str = Body(...), n:int = 5):
     extension = imghdr.what(None, file)
     # print(extension)
     img = Image.open(BytesIO(file))
